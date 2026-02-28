@@ -1,0 +1,202 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --ink: #1a1a18;
+  --muted: #888880;
+  --accent: #c84b2f;
+  --border: #e0ddd7;
+  --radius: 4px;
+  --mono: 'DM Mono', monospace;
+  --serif: 'Instrument Serif', Georgia, serif;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1.25rem 2rem;
+  gap: 2.5rem;
+}
+
+/* ── Header ── */
+header {
+  text-align: center;
+  animation: fadeUp 0.5s ease both;
+}
+
+.logo {
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-style: italic;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.dot {
+  color: var(--accent);
+}
+
+.tagline {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Main ── */
+main {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+textarea {
+  width: 100%;
+  min-height: 280px;
+  padding: 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  border: none;
+  outline: none;
+  resize: vertical;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--accent);
+}
+
+textarea::placeholder {
+  color: var(--muted);
+}
+
+textarea[readonly] {
+  background: #fafaf8;
+  cursor: default;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: #fafaf8;
+}
+
+#charCount {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ── Buttons ── */
+button {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 0.45rem 1.1rem;
+  border-radius: var(--radius);
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+
+button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* ── Result box ── */
+.result {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  animation: fadeUp 0.3s ease both;
+}
+
+.result.hidden {
+  display: none;
+}
+
+.result-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.link-row input {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fafaf8;
+  color: var(--ink);
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Footer ── */
+footer {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-top: auto;
+}
+
+/* ── Animation ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  body { padding: 2rem 1rem; }
+  textarea { min-height: 200px; }
+}
