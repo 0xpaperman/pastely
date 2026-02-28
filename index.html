@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Paste — share text instantly</title>
+  <title>Pastely — share text instantly</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -11,11 +11,12 @@
 <body>
 
   <header>
-    <div class="logo">paste<span class="dot">.</span></div>
+    <a href="index.html" class="logo">pastely<span class="dot">.</span></a>
     <p class="tagline">drop text. share a link.</p>
   </header>
 
   <main>
+    <!-- Create paste -->
     <div class="card">
       <textarea id="textInput" placeholder="Paste or type anything here…" spellcheck="false"></textarea>
       <div class="actions">
@@ -24,68 +25,88 @@
       </div>
     </div>
 
-    <div class="result hidden" id="result">
-      <p class="result-label">Your link</p>
-      <div class="link-row">
-        <input type="text" id="linkOutput" readonly />
-        <button id="copyBtn">Copy</button>
+    <!-- All pastes -->
+    <section class="pastes-section">
+      <p class="section-label">Recent pastes</p>
+      <div id="pasteList" class="paste-list">
+        <p class="loading">Loading…</p>
       </div>
-    </div>
+    </section>
   </main>
 
   <footer>built with plain HTML — no frameworks harmed</footer>
 
   <script>
+    const API = 'https://uor92nqx9c.execute-api.ap-southeast-2.amazonaws.com/dev';
+
     const textarea = document.getElementById('textInput');
     const charCount = document.getElementById('charCount');
     const shareBtn = document.getElementById('shareBtn');
-    const result = document.getElementById('result');
-    const linkOutput = document.getElementById('linkOutput');
-    const copyBtn = document.getElementById('copyBtn');
+    const pasteList = document.getElementById('pasteList');
 
+    // Char counter
     textarea.addEventListener('input', () => {
       const len = textarea.value.length;
       charCount.textContent = len === 1 ? '1 char' : `${len.toLocaleString()} chars`;
     });
 
-    shareBtn.addEventListener('click', () => {
+    // Create paste
+    shareBtn.addEventListener('click', async () => {
       const text = textarea.value.trim();
       if (!text) { textarea.focus(); return; }
 
-      // Encode text into URL fragment (client-side only, no backend yet)
-      const encoded = btoa(unescape(encodeURIComponent(text)));
-      const url = `${location.origin}${location.pathname}#${encoded}`;
-      linkOutput.value = url;
-      result.classList.remove('hidden');
-      result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+      shareBtn.textContent = 'Sharing…';
+      shareBtn.disabled = true;
 
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(linkOutput.value).then(() => {
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
-      });
-    });
-
-    // On load, check for shared text in URL fragment
-    window.addEventListener('load', () => {
-      const hash = location.hash.slice(1);
-      if (hash) {
-        try {
-          const decoded = decodeURIComponent(escape(atob(hash)));
-          textarea.value = decoded;
-          charCount.textContent = `${decoded.length.toLocaleString()} chars`;
-          textarea.readOnly = true;
-          shareBtn.textContent = 'Edit ↩';
-          shareBtn.addEventListener('click', () => {
-            textarea.readOnly = false;
-            textarea.focus();
-            history.replaceState(null, '', location.pathname);
-            shareBtn.textContent = 'Share →';
-          }, { once: true });
-        } catch(e) {}
+      try {
+        const res = await fetch(`${API}/paste`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        window.location.href = `paste.html?id=${data.id}`;
+      } catch (e) {
+        shareBtn.textContent = 'Error — try again';
+        shareBtn.disabled = false;
       }
     });
+
+    // Load all pastes
+    async function loadPastes() {
+      try {
+        const res = await fetch(`${API}/pastes`);
+        const data = await res.json();
+        const pastes = data.pastes;
+
+        if (!pastes || pastes.length === 0) {
+          pasteList.innerHTML = '<p class="empty">No pastes yet. Be the first!</p>';
+          return;
+        }
+
+        pastes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        pasteList.innerHTML = pastes.map(p => `
+          <a href="paste.html?id=${p.id}" class="paste-item">
+            <span class="paste-preview">${escapeHtml(p.text.slice(0, 80))}${p.text.length > 80 ? '…' : ''}</span>
+            <span class="paste-date">${formatDate(p.createdAt)}</span>
+          </a>
+        `).join('');
+      } catch (e) {
+        pasteList.innerHTML = '<p class="empty">Could not load pastes.</p>';
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    loadPastes();
   </script>
 </body>
 </html>
