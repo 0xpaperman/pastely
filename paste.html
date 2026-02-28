@@ -19,12 +19,20 @@
     <div id="pasteView">
       <p class="loading">Loading paste…</p>
     </div>
+
+    <section class="pastes-section">
+      <p class="section-label">Recent pastes</p>
+      <div id="pasteList" class="paste-list">
+        <p class="loading">Loading…</p>
+      </div>
+    </section>
   </main>
 
   <footer>built with plain HTML — no frameworks harmed</footer>
 
   <script>
-    const API = 'https://uor92nqx9c.execute-api.ap-southeast-2.amazonaws.com/dev';
+    // !! Replace this with your actual API Gateway URL !!
+    const API = 'https://YOUR-API-GATEWAY-URL.execute-api.ap-southeast-2.amazonaws.com/prod';
 
     async function loadPaste() {
       const params = new URLSearchParams(location.search);
@@ -90,7 +98,41 @@
       return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    async function loadPastes() {
+      const pasteList = document.getElementById('pasteList');
+      try {
+        const res = await fetch(`${API}/pastes`);
+        const data = await res.json();
+        const pastes = data.pastes;
+
+        if (!pastes || pastes.length === 0) {
+          pasteList.innerHTML = '<p class="empty">No other pastes yet.</p>';
+          return;
+        }
+
+        const currentId = new URLSearchParams(location.search).get('id');
+        const others = pastes
+          .filter(p => p.id !== currentId)
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (others.length === 0) {
+          pasteList.innerHTML = '<p class="empty">No other pastes yet.</p>';
+          return;
+        }
+
+        pasteList.innerHTML = others.map(p => `
+          <a href="paste.html?id=${p.id}" class="paste-item">
+            <span class="paste-preview">${escapeHtml(p.text.slice(0, 80))}${p.text.length > 80 ? '…' : ''}</span>
+            <span class="paste-date">${formatDate(p.createdAt)}</span>
+          </a>
+        `).join('');
+      } catch (e) {
+        pasteList.innerHTML = '<p class="empty">Could not load pastes.</p>';
+      }
+    }
+
     loadPaste();
+    loadPastes();
   </script>
 </body>
 </html>
