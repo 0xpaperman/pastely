@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paste — share text instantly</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <div class="logo">paste<span class="dot">.</span></div>
+    <p class="tagline">drop text. share a link.</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <textarea id="textInput" placeholder="Paste or type anything here…" spellcheck="false"></textarea>
+      <div class="actions">
+        <span id="charCount">0 chars</span>
+        <button id="shareBtn">Share →</button>
+      </div>
+    </div>
+
+    <div class="result hidden" id="result">
+      <p class="result-label">Your link</p>
+      <div class="link-row">
+        <input type="text" id="linkOutput" readonly />
+        <button id="copyBtn">Copy</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>built with plain HTML — no frameworks harmed</footer>
+
+  <script>
+    const textarea = document.getElementById('textInput');
+    const charCount = document.getElementById('charCount');
+    const shareBtn = document.getElementById('shareBtn');
+    const result = document.getElementById('result');
+    const linkOutput = document.getElementById('linkOutput');
+    const copyBtn = document.getElementById('copyBtn');
+
+    textarea.addEventListener('input', () => {
+      const len = textarea.value.length;
+      charCount.textContent = len === 1 ? '1 char' : `${len.toLocaleString()} chars`;
+    });
+
+    shareBtn.addEventListener('click', () => {
+      const text = textarea.value.trim();
+      if (!text) { textarea.focus(); return; }
+
+      // Encode text into URL fragment (client-side only, no backend yet)
+      const encoded = btoa(unescape(encodeURIComponent(text)));
+      const url = `${location.origin}${location.pathname}#${encoded}`;
+      linkOutput.value = url;
+      result.classList.remove('hidden');
+      result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(linkOutput.value).then(() => {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+      });
+    });
+
+    // On load, check for shared text in URL fragment
+    window.addEventListener('load', () => {
+      const hash = location.hash.slice(1);
+      if (hash) {
+        try {
+          const decoded = decodeURIComponent(escape(atob(hash)));
+          textarea.value = decoded;
+          charCount.textContent = `${decoded.length.toLocaleString()} chars`;
+          textarea.readOnly = true;
+          shareBtn.textContent = 'Edit ↩';
+          shareBtn.addEventListener('click', () => {
+            textarea.readOnly = false;
+            textarea.focus();
+            history.replaceState(null, '', location.pathname);
+            shareBtn.textContent = 'Share →';
+          }, { once: true });
+        } catch(e) {}
+      }
+    });
+  </script>
+</body>
+</html>
