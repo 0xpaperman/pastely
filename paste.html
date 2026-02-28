@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pastely — view paste</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="logo">pastely<span class="dot">.</span></a>
+    <p class="tagline">drop text. share a link.</p>
+  </header>
+
+  <main>
+    <div id="pasteView">
+      <p class="loading">Loading paste…</p>
+    </div>
+  </main>
+
+  <footer>built with plain HTML — no frameworks harmed</footer>
+
+  <script>
+    const API = 'https://uor92nqx9c.execute-api.ap-southeast-2.amazonaws.com/dev';
+
+    async function loadPaste() {
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      const view = document.getElementById('pasteView');
+
+      if (!id) {
+        view.innerHTML = '<p class="empty">No paste ID provided.</p>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/paste/${id}`);
+
+        if (res.status === 404) {
+          view.innerHTML = '<p class="empty">Paste not found.</p>';
+          return;
+        }
+
+        const data = await res.json();
+
+        view.innerHTML = `
+          <div class="paste-meta">
+            <span class="paste-id">ID: ${escapeHtml(id)}</span>
+            <span class="paste-date">${formatDate(data.createdAt)}</span>
+          </div>
+          <div class="card">
+            <textarea readonly spellcheck="false">${escapeHtml(data.text)}</textarea>
+            <div class="actions">
+              <span id="charCount">${data.text.length.toLocaleString()} chars</span>
+              <div class="action-buttons">
+                <button id="copyBtn">Copy text</button>
+                <button id="newBtn">New paste</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.title = `Pastely — ${data.text.slice(0, 40)}`;
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+          navigator.clipboard.writeText(data.text).then(() => {
+            document.getElementById('copyBtn').textContent = 'Copied!';
+            setTimeout(() => document.getElementById('copyBtn').textContent = 'Copy text', 2000);
+          });
+        });
+
+        document.getElementById('newBtn').addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+
+      } catch (e) {
+        view.innerHTML = '<p class="empty">Could not load paste.</p>';
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    loadPaste();
+  </script>
+</body>
+</html>
