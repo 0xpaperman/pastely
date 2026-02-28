@@ -177,6 +177,7 @@ button:disabled {
   color: var(--ink);
   transition: border-color 0.15s, box-shadow 0.15s;
   animation: fadeUp 0.3s ease both;
+  min-width: 0;
 }
 
 .paste-item:hover {
@@ -190,6 +191,7 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+  min-width: 0;
 }
 
 .paste-date {
